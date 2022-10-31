@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="DCE_customerModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+  <EntityType Name="Customer">
+    <Key>
+      <PropertyRef Name="UserId" />
+    </Key>
+    <Property Name="UserId" Type="Guid" Nullable="false" />
+    <Property Name="Username" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+    <Property Name="Email" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+    <Property Name="FirstName" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+    <Property Name="LastName" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+    <Property Name="CreateOn" Type="DateTime" Precision="3" />
+    <Property Name="IsActive" Type="Boolean" />
+    <NavigationProperty Name="Order_" Relationship="Self.FK_order_orderBy" FromRole="Customer" ToRole="Order_" />
+  </EntityType>
+  <EntityType Name="Order_">
+    <Key>
+      <PropertyRef Name="OrderId" />
+    </Key>
+    <Property Name="OrderId" Type="Guid" Nullable="false" />
+    <Property Name="ProductId" Type="Guid" />
+    <Property Name="OrderStatus" Type="Byte" />
+    <Property Name="OrderType" Type="Byte" />
+    <Property Name="OrderBy" Type="Guid" />
+    <Property Name="OrderedOn" Type="DateTime" Precision="3" />
+    <Property Name="ShippedOn" Type="DateTime" Precision="3" />
+    <Property Name="IsActive" Type="Boolean" />
+    <NavigationProperty Name="Customer" Relationship="Self.FK_order_orderBy" FromRole="Order_" ToRole="Customer" />
+    <NavigationProperty Name="Product" Relationship="Self.FK_order_productID" FromRole="Order_" ToRole="Product" />
+  </EntityType>
+  <EntityType Name="Product">
+    <Key>
+      <PropertyRef Name="ProductId" />
+    </Key>
+    <Property Name="ProductId" Type="Guid" Nullable="false" />
+    <Property Name="ProductName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+    <Property Name="UnitPrice" Type="Decimal" Precision="18" Scale="0" />
+    <Property Name="SupplierId" Type="Guid" />
+    <Property Name="CreateOn" Type="DateTime" Precision="3" />
+    <Property Name="IsActive" Type="Boolean" />
+    <NavigationProperty Name="Order_" Relationship="Self.FK_order_productID" FromRole="Product" ToRole="Order_" />
+    <NavigationProperty Name="Supplier" Relationship="Self.FK_Product_SupplierId" FromRole="Product" ToRole="Supplier" />
+  </EntityType>
+  <EntityType Name="Supplier">
+    <Key>
+      <PropertyRef Name="SupplierId" />
+    </Key>
+    <Property Name="SupplierId" Type="Guid" Nullable="false" />
+    <Property Name="SupplierName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+    <Property Name="CreateOn" Type="DateTime" Precision="3" />
+    <Property Name="IsActive" Type="Boolean" />
+    <NavigationProperty Name="Products" Relationship="Self.FK_Product_SupplierId" FromRole="Supplier" ToRole="Product" />
+  </EntityType>
+  <Association Name="FK_order_orderBy">
+    <End Role="Customer" Type="Self.Customer" Multiplicity="0..1">
+      <OnDelete Action="Cascade" />
+    </End>
+    <End Role="Order_" Type="Self.Order_" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Customer">
+        <PropertyRef Name="UserId" />
+      </Principal>
+      <Dependent Role="Order_">
+        <PropertyRef Name="OrderBy" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_order_productID">
+    <End Role="Product" Type="Self.Product" Multiplicity="0..1">
+      <OnDelete Action="Cascade" />
+    </End>
+    <End Role="Order_" Type="Self.Order_" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Product">
+        <PropertyRef Name="ProductId" />
+      </Principal>
+      <Dependent Role="Order_">
+        <PropertyRef Name="ProductId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Product_SupplierId">
+    <End Role="Supplier" Type="Self.Supplier" Multiplicity="0..1">
+      <OnDelete Action="Cascade" />
+    </End>
+    <End Role="Product" Type="Self.Product" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Supplier">
+        <PropertyRef Name="SupplierId" />
+      </Principal>
+      <Dependent Role="Product">
+        <PropertyRef Name="SupplierId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="DCE_customerEntities" annotation:LazyLoadingEnabled="true">
+    <EntitySet Name="Customers" EntityType="Self.Customer" />
+    <EntitySet Name="Order_" EntityType="Self.Order_" />
+    <EntitySet Name="Products" EntityType="Self.Product" />
+    <EntitySet Name="Suppliers" EntityType="Self.Supplier" />
+    <AssociationSet Name="FK_order_orderBy" Association="Self.FK_order_orderBy">
+      <End Role="Customer" EntitySet="Customers" />
+      <End Role="Order_" EntitySet="Order_" />
+    </AssociationSet>
+    <AssociationSet Name="FK_order_productID" Association="Self.FK_order_productID">
+      <End Role="Product" EntitySet="Products" />
+      <End Role="Order_" EntitySet="Order_" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Product_SupplierId" Association="Self.FK_Product_SupplierId">
+      <End Role="Supplier" EntitySet="Suppliers" />
+      <End Role="Product" EntitySet="Products" />
+    </AssociationSet>
+    <FunctionImport Name="GetActiveOrdersByCustomer" ReturnType="Collection(DCE_customerModel.GetActiveOrdersByCustomer_Result)">
+      <Parameter Name="name" Mode="In" Type="String" />
+    </FunctionImport>
+  </EntityContainer>
+  <ComplexType Name="GetActiveOrdersByCustomer_Result">
+    <Property Type="Guid" Name="UserId" Nullable="false" />
+    <Property Type="String" Name="Username" Nullable="true" MaxLength="30" />
+    <Property Type="String" Name="Email" Nullable="true" MaxLength="20" />
+    <Property Type="String" Name="FirstName" Nullable="true" MaxLength="20" />
+    <Property Type="String" Name="LastName" Nullable="true" MaxLength="20" />
+    <Property Type="DateTime" Name="CreateOn" Nullable="true" Precision="23" />
+    <Property Type="Boolean" Name="IsActive" Nullable="true" />
+    <Property Type="Guid" Name="SupplierId" Nullable="false" />
+    <Property Type="String" Name="SupplierName" Nullable="true" MaxLength="50" />
+    <Property Type="DateTime" Name="CreateOn1" Nullable="true" Precision="23" />
+    <Property Type="Boolean" Name="IsActive1" Nullable="true" />
+    <Property Type="Guid" Name="ProductId" Nullable="false" />
+    <Property Type="String" Name="ProductName" Nullable="true" MaxLength="50" />
+    <Property Type="Decimal" Name="UnitPrice" Nullable="true" Precision="18" Scale="0" />
+    <Property Type="Guid" Name="SupplierId1" Nullable="true" />
+    <Property Type="DateTime" Name="CreateOn2" Nullable="true" Precision="23" />
+    <Property Type="Boolean" Name="IsActive2" Nullable="true" />
+    <Property Type="Guid" Name="OrderId" Nullable="false" />
+    <Property Type="Guid" Name="ProductId1" Nullable="true" />
+    <Property Type="Byte" Name="OrderStatus" Nullable="true" />
+    <Property Type="Byte" Name="OrderType" Nullable="true" />
+    <Property Type="Guid" Name="OrderBy" Nullable="true" />
+    <Property Type="DateTime" Name="OrderedOn" Nullable="true" Precision="23" />
+    <Property Type="DateTime" Name="ShippedOn" Nullable="true" Precision="23" />
+    <Property Type="Boolean" Name="IsActive3" Nullable="true" />
+  </ComplexType>
+</Schema>
